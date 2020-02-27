@@ -13,8 +13,6 @@ import java.util.List;
 
 import hudson.model.Run;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
 import org.kohsuke.stapler.export.Exported;
 
 /*
@@ -44,12 +42,18 @@ public class QueuedContextStruct implements Serializable {
 	private transient volatile String buildExternalizableId = null;
 
 	/*
+	 * Name of the variable to save the locks taken.
+	 */
+	private String variableName;
+
+	/*
 	 * Constructor for the QueuedContextStruct class.
 	 */
-	public QueuedContextStruct(StepContext context, List<LockableResourcesStruct> lockableResourcesStruct, String resourceDescription) {
+	public QueuedContextStruct(StepContext context, List<LockableResourcesStruct> lockableResourcesStruct, String resourceDescription, String variableName) {
 		this.context = context;
 		this.lockableResourcesStruct = lockableResourcesStruct;
 		this.resourceDescription = resourceDescription;
+		this.variableName = variableName;
 	}
 
 	/*
@@ -100,6 +104,13 @@ public class QueuedContextStruct implements Serializable {
 	@Exported
 	public String getResourceDescription() {
 		return this.resourceDescription;
+	}
+
+	/*
+	 * Gets the variable name to save the locks taken.
+	 */
+	public String getVariableName() {
+		return this.variableName;
 	}
 
 	private static final long serialVersionUID = 1L;

@@ -2,8 +2,6 @@ package org.jenkins.plugins.lockableresources;
 
 import java.io.Serializable;
 
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -15,7 +13,6 @@ import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.Util;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 public class LockStepResource extends AbstractDescribableImpl<LockStepResource> implements Serializable {
@@ -81,10 +78,14 @@ public class LockStepResource extends AbstractDescribableImpl<LockStepResource> 
 
 	/**
 	 * Label and resource are mutual exclusive.
+	 * The label, if provided, must be configured (at least one resource must have this label).
 	 */
 	public static void validate(String resource, String label, int quantity) throws Exception {
 		if (label != null && !label.isEmpty() && resource !=  null && !resource.isEmpty()) {
 			throw new IllegalArgumentException("Label and resource name cannot be specified simultaneously.");
+		}
+		if (label != null && !LockableResourcesManager.get().isValidLabel( label ) ) {
+			throw new IllegalArgumentException("The label does not exist: " + label);
 		}
 	}
 
@@ -110,6 +111,9 @@ public class LockStepResource extends AbstractDescribableImpl<LockStepResource> 
 			}
 			if ((resourceLabel == null) && (resourceName == null)) {
 				return FormValidation.error("Either label or resource name must be specified.");
+			}
+			if (resourceLabel != null && !LockableResourcesManager.get().isValidLabel(resourceLabel)) {
+				return FormValidation.error("The label does not exist: " + resourceLabel);
 			}
 			return FormValidation.ok();
 		}

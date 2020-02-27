@@ -46,15 +46,15 @@ public class LockableResourcesRootAction implements RootAction {
 			Messages._LockableResourcesRootAction_ReservePermission_Description(), Jenkins.ADMINISTER,
 			PermissionScope.JENKINS);
 
+	public static final Permission VIEW = new Permission(PERMISSIONS_GROUP,
+			Messages.LockableResourcesRootAction_ViewPermission(),
+			Messages._LockableResourcesRootAction_ViewPermission_Description(), Jenkins.ADMINISTER,
+			PermissionScope.JENKINS);
+	
 	public static final String ICON = "/plugin/lockable-resources/img/device-24x24.png";
 
 	public String getIconFileName() {
-		if (User.current() != null) {
-			// only show if logged in
-			return ICON;
-		} else {
-			return null;
-		}
+		return (Jenkins.getInstance().hasPermission(VIEW)) ? ICON : null;
 	}
 
 	public String getUserName() {
@@ -70,7 +70,7 @@ public class LockableResourcesRootAction implements RootAction {
 	}
 
 	public String getUrlName() {
-		return "lockable-resources";
+		return (Jenkins.getInstance().hasPermission(VIEW)) ? "lockable-resources" : "";
 	}
 
 	public List<LockableResource> getResources() {
@@ -108,7 +108,7 @@ public class LockableResourcesRootAction implements RootAction {
 			return;
 		}
 
-		List<LockableResource> resources = new ArrayList<LockableResource>();
+		List<LockableResource> resources = new ArrayList<>();
 		resources.add(r);
 		LockableResourcesManager.get().unlock(resources, null);
 
@@ -126,7 +126,7 @@ public class LockableResourcesRootAction implements RootAction {
 			return;
 		}
 
-		List<LockableResource> resources = new ArrayList<LockableResource>();
+		List<LockableResource> resources = new ArrayList<>();
 		resources.add(r);
 		String userName = getUserName();
 		if (userName != null)
@@ -152,7 +152,7 @@ public class LockableResourcesRootAction implements RootAction {
 			throw new AccessDeniedException2(Jenkins.getAuthentication(),
 					RESERVE);
 
-		List<LockableResource> resources = new ArrayList<LockableResource>();
+		List<LockableResource> resources = new ArrayList<>();
 		resources.add(r);
 		LockableResourcesManager.get().unreserve(resources);
 
@@ -170,7 +170,7 @@ public class LockableResourcesRootAction implements RootAction {
 			return;
 		}
 
-		List<LockableResource> resources = new ArrayList<LockableResource>();
+		List<LockableResource> resources = new ArrayList<>();
 		resources.add(r);
 		LockableResourcesManager.get().reset(resources);
 

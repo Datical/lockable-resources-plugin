@@ -14,7 +14,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixProject;
-import hudson.model.AbstractProject;
 import hudson.model.Job;
 import hudson.model.Queue;
 import hudson.model.queue.QueueTaskDispatcher;
@@ -31,9 +30,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang.time.DateUtils;
 import org.jenkins.plugins.lockableresources.LockableResource;
 import org.jenkins.plugins.lockableresources.LockableResourcesManager;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SecureGroovyScript;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -73,7 +72,7 @@ public class LockableResourcesQueueTaskDispatcher extends QueueTaskDispatcher {
 			" trying to get resources with these details: " + resources);
 
 		if (resourceNumber > 0 || !resources.label.isEmpty() || resources.getResourceMatchScript() != null) {
-			Map<String, Object> params = new HashMap<String, Object>();
+			Map<String, Object> params = new HashMap<>();
 
 			// Inject Build Parameters, if possible and applicable to the "item" type
 			try {
@@ -161,10 +160,28 @@ public class LockableResourcesQueueTaskDispatcher extends QueueTaskDispatcher {
 
 		@Override
 		public String getShortDescription() {
-			if (this.rscStruct.label.isEmpty())
-				return "Waiting for resources " + rscStruct.required.toString();
-			else
+			if (this.rscStruct.label.isEmpty()) {
+				if (this.rscStruct.required.size() > 0) {
+					return "Waiting for resource instances " + rscStruct.required.toString();
+				} else {
+					final SecureGroovyScript systemGroovyScript = this.rscStruct.getResourceMatchScript();
+					if (systemGroovyScript != null) {
+						// Empty or not... just keep the logic in sync
+						// with tryQueue() in LockableResourcesManager
+						if (systemGroovyScript.getScript().isEmpty()) {
+							return "Waiting for resources identified by custom script (which is empty)";
+						} else {
+							return "Waiting for resources identified by custom script";
+						}
+					}
+					// TODO: Developers should extend here if LockableResourcesStruct is extended
+					LOGGER.log(Level.WARNING, "Failed to classify reason of waiting for resource: "
+						+ this.rscStruct.toString());
+					return "Waiting for lockable resources";
+				}
+			} else {
 				return "Waiting for resources with label " + rscStruct.label;
+			}
 		}
 	}
 
